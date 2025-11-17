@@ -17,7 +17,10 @@ test-api:
 	docker run -d --network calc-test-api --env PYTHONPATH=/opt/calc --name apiserver \
 	  --env FLASK_APP=app/api.py -p 3003:3003 -w /opt/calc calculator-app:latest \
 	  flask run --host=0.0.0.0
-	sleep 3  # <<< darle un respiro al apiserver para arrancar
+	until docker exec apiserver curl -s http://localhost:3003/; do \
+	  echo "Esperando apiserver..."; \
+	  sleep 2; \
+	done
 	docker run --network calc-test-api --name api-tests --env PYTHONPATH=/opt/calc \
 	  --env BASE_URL=http://apiserver:3003/ -w /opt/calc calculator-app:latest \
 	  pytest --junit-xml=results/api_result.xml -m api || true
